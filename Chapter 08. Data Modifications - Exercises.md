@@ -68,8 +68,6 @@ _(89 rows affected)_
 
 ### Textbook Solution
 
-
-
 ```
 INSERT INTO Customers
 select custid, companyname, country, region, city
@@ -80,8 +78,6 @@ where exists
 ```
 
 _(89 rows affected)_
-
-
 
 
 ## Exercises 1-3
@@ -100,11 +96,7 @@ and orderdate >= '2014-01-01'
 and orderdate < '2017-01-01'
 ```
 
-
 _(830 rows affected)_
-
-
-
 
 ---
 
@@ -114,7 +106,11 @@ _(830 rows affected)_
 
 
 
-## Exercises 2
+
+
+
+
+# Exercises 2
 
 Delete from the dbo.Orders table orders that were placed before August 2014 Use the OUTPUT clause to return the orderid and orderdate of the deleted orders
 
@@ -149,12 +145,12 @@ orderid     orderdate
 
 (22 row(s) affected)
 
--- 3
---- Delete from the dbo.Orders table orders placed by customers from Brazil
+# Exercises 3
+Delete from the dbo.Orders table orders placed by customers from Brazil
 
--- 4
--- Run the following query against dbo.Customers,
--- and notice that some rows have a NULL in the region column
+# Exercises 4
+Run the following query against dbo.Customers, and notice that some rows have a NULL in the region column
+
 SELECT * FROM dbo.Customers;
 
 -- Output:
@@ -241,7 +237,7 @@ custid      oldregion       newregion
 
 (58 row(s) affected)
 
--- 5
+# Exercises 5
 -- Update in the dbo.Orders table all orders placed by UK customers
 -- and set their shipcountry, shipregion, shipcity values
 -- to the country, region, city values of the corresponding customers from dbo.Customers
