@@ -553,7 +553,7 @@ where exists
 
 ---
 
-# 8.3 Updating Data
+# 8.3 Updating Data (page 266)
 
 ```
 DROP TABLE IF EXISTS dbo.OrderDetails, dbo.Orders;
@@ -602,6 +602,436 @@ INSERT INTO dbo.OrderDetails SELECT * FROM Sales.OrderDetails;
 ```
 
 ## 8.3.1 UPDATE statement
+
+```
+select discount from orderdetails
+where productid = 51
+```
+
+<img width="91" height="561" alt="image" src="https://github.com/user-attachments/assets/aa67ceef-36b3-4bb7-be3b-8b5b257cc890" />
+
+
+```
+update OrderDetails
+set discount = discount + 0.05
+where productid = 51;
+```
+
+_(39 rows affected)_
+
+```
+select discount from orderdetails
+where productid = 51
+```
+
+<img width="92" height="674" alt="image" src="https://github.com/user-attachments/assets/4d6b5624-ec4b-49e9-b90f-5952b63748d7" />
+
+We can use `OUTPUT` clause to see the changes
+
+
+### using Compound Assignment operators 
+
+We can use `SET discount += 0.05` instead of `SET discount = discount + 0.05`
+
+```
+update OrderDetails
+SET discount += 0.05
+where productid = 51;
+```
+
+
+
+### All-at-once Operation
+
+```
+drop table if exists t1
+create table t1(col1 int, col2 int)
+insert into t1 values (100,0)
+
+select * from t1
+```
+
+<img width="116" height="54" alt="image" src="https://github.com/user-attachments/assets/32b9113c-18c0-4598-86f2-72c3d94b9c33" />
+
+
+```
+update t1
+set col1 = col1 + 10, col2 = col1 + 10;
+select * from t1
+```
+<img width="115" height="46" alt="image" src="https://github.com/user-attachments/assets/91cae4e5-f730-4cea-87fa-adfce695426a" />
+
+
+reset t1
+
+```
+update t1
+set col1=col2, col2=col1;
+select * from t1;
+```
+
+<img width="110" height="50" alt="image" src="https://github.com/user-attachments/assets/f51d8cb4-6d20-4f91-9ec4-a2c608c44724" />
+
+## 8.3.2 UPDATE based on a join
+
+### Remember this is non-ANSI
+
+```
+update OD
+	set discount +=0.05
+from OrderDetails as OD
+	inner join Orders as O
+	on OD.orderid = O.orderid
+Where O.custid = 1
+```
+
+### The standard version
+
+```
+Update dbo.OrderDetails
+	set discount += 0.05
+where exists
+	(select * from dbo.Orders as O
+	where O.orderid = OrderDetails.orderid
+	and O.custid = 1);
+```
+
+
+
+
+
+## 8.3.3 Assignment UPDATE
+
+
+```
+drop table if exists dbo.MySequences;
+
+create table dbo.MySequences
+(
+	id Varchar(10) not null
+		constraint PK_mySequences primary key(id),
+	val int not null
+);
+insert into dbo.MySequences Values('SEQ1', 0);
+```
+
+
+
+
+
+
+
+# 8.4 Merging Data
+
+
+```
+-- Listing 8-2 Code that Creates and Populates Customers and CustomersStage
+DROP TABLE IF EXISTS dbo.Customers, dbo.CustomersStage;
+GO
+
+CREATE TABLE dbo.Customers
+(
+  custid      INT         NOT NULL,
+  companyname VARCHAR(25) NOT NULL,
+  phone       VARCHAR(20) NOT NULL,
+  address     VARCHAR(50) NOT NULL,
+  CONSTRAINT PK_Customers PRIMARY KEY(custid)
+);
+
+INSERT INTO dbo.Customers(custid, companyname, phone, address)
+VALUES
+  (1, 'cust 1', '(111) 111-1111', 'address 1'),
+  (2, 'cust 2', '(222) 222-2222', 'address 2'),
+  (3, 'cust 3', '(333) 333-3333', 'address 3'),
+  (4, 'cust 4', '(444) 444-4444', 'address 4'),
+  (5, 'cust 5', '(555) 555-5555', 'address 5');
+
+CREATE TABLE dbo.CustomersStage
+(
+  custid      INT         NOT NULL,
+  companyname VARCHAR(25) NOT NULL,
+  phone       VARCHAR(20) NOT NULL,
+  address     VARCHAR(50) NOT NULL,
+  CONSTRAINT PK_CustomersStage PRIMARY KEY(custid)
+);
+
+INSERT INTO dbo.CustomersStage(custid, companyname, phone, address)
+VALUES
+  (2, 'AAAAA', '(222) 222-2222', 'address 2'),
+  (3, 'cust 3', '(333) 333-3333', 'address 3'),
+  (5, 'BBBBB', 'CCCCC', 'DDDDD'),
+  (6, 'cust 6 (new)', '(666) 666-6666', 'address 6'),
+  (7, 'cust 7 (new)', '(777) 777-7777', 'address 7');
+```
+
+
+
+**Customers** table
+<img width="314" height="122" alt="image" src="https://github.com/user-attachments/assets/4c03186b-ed79-4547-b14d-eac5422f1028" />
+
+
+
+**CustomersStage** table
+
+<img width="324" height="125" alt="image" src="https://github.com/user-attachments/assets/3fa897a4-c69f-4159-8b85-c679d9ddf959" />
+
+
+### Add nonexistent customers and update existing ones
+
+```
+merge into customers as TGT
+using CustomersStage as SRC
+	on TGT.custid = SRC.custid
+when matched then
+	update set 
+			tgt.companyname = src.companyname,
+			tgt.phone = src.phone,
+			tgt.address = src.address
+when not matched then
+	insert (custid, companyname, phone, address)
+	values (src.custid, src.companyname, src.phone, src.address);
+```
+
+_(5 rows affected)_
+
+<img width="314" height="122" alt="image" src="https://github.com/user-attachments/assets/4c03186b-ed79-4547-b14d-eac5422f1028" />
+
+compare against the original **customer** table
+
+<img width="309" height="159" alt="image" src="https://github.com/user-attachments/assets/d4e7cc70-43be-49dc-a220-83df7282f7b4" />
+
+
+
+### WHEN NOT MATCHED BY SOURCE
+
+```
+merge into customers as TGT
+using CustomersStage as SRC
+	on TGT.custid = SRC.custid
+when matched then
+	update set 
+			tgt.companyname = src.companyname,
+			tgt.phone = src.phone,
+			tgt.address = src.address
+when not matched then
+	insert (custid, companyname, phone, address)
+	values (src.custid, src.companyname, src.phone, src.address)
+WHEN NOT MATCHED BY SOURCE THEN
+	DELETE;
+```
+
+<img width="313" height="122" alt="image" src="https://github.com/user-attachments/assets/b01ff90d-9f4e-4587-8383-569720acf6a0" />
+
+
+### apply update if at least one column value is different
+
+Use `AND` in the `WHEN MATCHED` clause.
+
+
+```
+merge into customers as TGT
+using CustomersStage as SRC
+	on TGT.custid = SRC.custid
+WHEN MATCHED AND
+			(tgt.companyname <> src.companyname
+			 OR tgt.phone <> src.phone
+			 OR tgt.address <> src.address) THEN
+	update set 
+				tgt.companyname = src.companyname,
+				tgt.phone = src.phone,
+				tgt.address = src.address
+
+WHEN NOT MATCHED THEN
+	insert (custid, companyname, phone, address)
+	values (src.custid, src.companyname, src.phone, src.address);
+```
+
+
+# 8.5 Modifying data through table expressions (page 276)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
