@@ -157,6 +157,12 @@ from sales.orders
 ```
 
 
+### ANSI equivalent WILL NOT WORK in SQL Server
+
+```
+CREATE TABLE new_table 
+AS SELECT * FROM existing_table
+```
 
 ---
 
